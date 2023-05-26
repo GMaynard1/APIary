@@ -1,0 +1,7 @@
+install.packages('devtools')
+install.packages('logr')
+install.packages('lubridate')
+install.packages('RMySQL')
+install.packages('yaml')
+library(devtools)
+install_github("GMaynard1/emolt_QAQC",force=TRUE,upgrade='always',)
