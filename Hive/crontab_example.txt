@@ -1,0 +1,5 @@
+## Add this line to the crontab of the host machine (NOT THE CONTAINER) to 
+## run workR bees. The example below shows how to run the decipher script
+## every minute in a container called "hive". 
+
+*/1 * * * * docker exec hive Rscript workR-bees/Decipher/decipher.R

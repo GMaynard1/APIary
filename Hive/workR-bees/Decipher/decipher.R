@@ -23,7 +23,7 @@ library(RMyDataTrash)
 library(RMySQL)
 library(yaml)
 ## Load necessary scripts
-scriptlist=c("old_mobile_decode.R")
+scriptlist=c("moana_decode.R","old_mobile_decode.R")
 for(i in scriptlist){
   source(paste0("workR-bees/R Functions/",i))
 }
@@ -109,23 +109,29 @@ new_data=data.frame(
 )
 ## Loop over the messages and decode them
 for(i in 1:nrow(transmissions)){
-  if(is.na(transmissions$vessel[i])==FALSE){
+  if(is.na(transmissions$vessel[i])==FALSE&&transmissions$data[i]!=""){
+    cat(paste0(i,": "))
     if(transmissions$vessel[i]%in%old_mobile){
       x=old_mobile_decode(data=transmissions$data[i],transmit_time=transmissions$transmit_time[i])
-      new_messages=rbind(new_messages,x[[1]])
-      new_data=rbind(new_data,x[[2]])
     } else {
       if(transmissions$vessel[i]%in%old_fixed){
         cat("old fixed \n")
       } else {
         if(transmissions$vessel[i]%in%new_moana){
-          cat("new moana \n")
+          x=moana_decode(data=transmissions$data[i],transmit_time=transmissions$transmit_time[i])
         } else {
           if(transmissions$vessel[i]%in%new_standard){
             cat("new standard \n")
           }
         }
       }
+    }
+    if(exists("x")){
+      new_messages=rbind(new_messages,x[[1]])
+      new_data=rbind(new_data,x[[2]])
+      rm(x)
+    } else {
+      cat("\n")
     }
   }
 }
