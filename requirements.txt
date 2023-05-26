@@ -1,0 +1,7 @@
+cryptography==3.4.8
+fastapi==0.95.0
+pip>=23.1.2
+pydantic==1.10.4
+PyMySQL==1.0.2
+PyYAML==6.0
+uvicorn>=0.15.0
