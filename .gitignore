@@ -3,3 +3,5 @@
 .RData
 .Ruserdata
 app/utils/*.yml
+workR-bees/logs
+workR-bees/*.yml
