@@ -23,23 +23,23 @@ library(RMyDataTrash)
 library(RMySQL)
 library(yaml)
 ## Load necessary scripts
-scriptlist=c()
+scriptlist=c("old_mobile_decode.R")
 for(i in scriptlist){
-  source(paste0("directory",i))
+  source(paste0("workR-bees/R Functions/",i))
 }
 ## Turn off verbose logging
 options("logr.notes"=FALSE)
 ## Create a logfile for this run
-filename="directory/decipher.log"
+filename="/var/log/workR-bees/decipher.log"
 logr::log_open(filename)
 ## Establish a read-only connection to the database
 conn=RMySQL::dbConnect(
   MySQL(),
-  user=read_yaml("dev_db_all.yml")$drone$User,
-  password=read_yaml("dev_db_all.yml")$drone$Password,
-  dbname=read_yaml("dev_db_all.yml")$drone$Database,
-  host=read_yaml("dev_db_all.yml")$drone$Host,
-  port=read_yaml("dev_db_all.yml")$drone$Port
+  user=read_yaml("workR-bees/dev_db_all.yml")$drone$User,
+  password=read_yaml("workR-bees/dev_db_all.yml")$drone$Password,
+  dbname=read_yaml("workR-bees/dev_db_all.yml")$drone$Database,
+  host=read_yaml("workR-bees/dev_db_all.yml")$drone$Host,
+  port=read_yaml("workR-bees/dev_db_all.yml")$drone$Port
 )
 ## Download all existing pairs from the database
 rockblocks=dbGetQuery(
@@ -111,7 +111,9 @@ new_data=data.frame(
 for(i in 1:nrow(transmissions)){
   if(is.na(transmissions$vessel[i])==FALSE){
     if(transmissions$vessel[i]%in%old_mobile){
-      cat("old mobile \n")
+      x=old_mobile_decode(data=transmissions$data[i],transmit_time=transmissions$transmit_time[i])
+      new_messages=rbind(new_messages,x[[1]])
+      new_data=rbind(new_data,x[[2]])
     } else {
       if(transmissions$vessel[i]%in%old_fixed){
         cat("old fixed \n")
@@ -130,11 +132,11 @@ for(i in 1:nrow(transmissions)){
 ## Create a write connection to the database
 conn=RMySQL::dbConnect(
   MySQL(),
-  user=read_yaml("dev_db_all.yml")$worker$User,
-  password=read_yaml("dev_db_all.yml")$worker$Password,
-  dbname=read_yaml("dev_db_all.yml")$worker$Database,
-  host=read_yaml("dev_db_all.yml")$worker$Host,
-  port=read_yaml("dev_db_all.yml")$worker$Port
+  user=read_yaml("workR-bees/dev_db_all.yml")$worker$User,
+  password=read_yaml("workR-bees/dev_db_all.yml")$worker$Password,
+  dbname=read_yaml("workR-bees/dev_db_all.yml")$worker$Database,
+  host=read_yaml("workR-bees/dev_db_all.yml")$worker$Host,
+  port=read_yaml("workR-bees/dev_db_all.yml")$worker$Port
 )
 ## Load the new data into the appropriate database tables
 ## Disconnect from the database
@@ -142,13 +144,16 @@ dbDisconnect(conn)
 ## Create a delete connection to the database
 conn=RMySQL::dbConnect(
   MySQL(),
-  user=read_yaml("dev_db_all.yml")$queen$User,
-  password=read_yaml("dev_db_all.yml")$queen$Password,
-  dbname=read_yaml("dev_db_all.yml")$queen$Database,
-  host=read_yaml("dev_db_all.yml")$queen$Host,
-  port=read_yaml("dev_db_all.yml")$queen$Port
+  user=read_yaml("workR-bees/dev_db_all.yml")$queen$User,
+  password=read_yaml("workR-bees/dev_db_all.yml")$queen$Password,
+  dbname=read_yaml("workR-bees/dev_db_all.yml")$queen$Database,
+  host=read_yaml("workR-bees/dev_db_all.yml")$queen$Host,
+  port=read_yaml("workR-bees/dev_db_all.yml")$queen$Port
 )
 ## Remove any successfully processed records from the RAW_TRANSMISSIONS table
 ## Remove any empty or indecipherable records from the RAW_TRANSMISSIONS table
 ## Disconnect from the database
 dbDisconnect(conn)
+logr::log_print(new_messages)
+logr::log_print(new_data)
+logr::log_close()
